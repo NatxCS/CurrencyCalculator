@@ -1,4 +1,3 @@
-import 'package:currency_calculator/screens/converter_screen.dart';
 import 'package:flutter/material.dart';
 
 final List<String> currencies = [
@@ -16,7 +15,10 @@ final List<String> currencies = [
 bool isSearching = false;
 
 class CurrencyList extends StatefulWidget {
-  const CurrencyList({super.key});
+  final String selectedCurrency;
+
+  const CurrencyList({Key? key, required this.selectedCurrency})
+      : super(key: key);
 
   @override
   State<CurrencyList> createState() => _CurrencyListState();
@@ -31,8 +33,7 @@ class _CurrencyListState extends State<CurrencyList> {
   @override
   void initState() {
     super.initState();
-    filteredItems = List.from(
-        currencies); // Initialize filteredItems with all items initially
+    filteredItems = List.from(currencies);
   }
 
   @override
@@ -53,7 +54,6 @@ class _CurrencyListState extends State<CurrencyList> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +73,7 @@ class _CurrencyListState extends State<CurrencyList> {
                   hintText: 'Search',
                 ),
               )
-            : const Text('ListView Example'),
+            : const Text('List of currencies'),
         actions: [
           IconButton(
             icon: Icon(
@@ -85,7 +85,7 @@ class _CurrencyListState extends State<CurrencyList> {
                 isSearching = !isSearching;
                 if (isSearching) {
                   searchFocusNode.requestFocus();
-                }else{
+                } else {
                   searchFocusNode.unfocus();
                   searchController.clear();
                   filterItems();
@@ -98,17 +98,17 @@ class _CurrencyListState extends State<CurrencyList> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () {
-            Navigator.pop(
-              context,
-              MaterialPageRoute(builder: (context) => const Converter(chooseCurrency: "USD",)),
-            );
+            Navigator.pop(context);
           },
         ),
       ),
       body: ListView.builder(
         itemCount: filteredItems.length,
         itemBuilder: (context, int index) {
-          return CustomItem(filteredItems: filteredItems, index: index,);
+          return CustomItem(
+            filteredItems: filteredItems,
+            index: index,
+          );
         },
       ),
     );
@@ -116,10 +116,8 @@ class _CurrencyListState extends State<CurrencyList> {
 }
 
 class CustomItem extends StatelessWidget {
-  const CustomItem({
-    super.key,
-    required this.filteredItems, required this.index
-  });
+  const CustomItem(
+      {super.key, required this.filteredItems, required this.index});
 
   final List<String> filteredItems;
   final int index;
@@ -127,10 +125,10 @@ class CustomItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         Navigator.pop(
-          context, 
-          MaterialPageRoute(builder: (context) => Converter(chooseCurrency: filteredItems[index]))
+          context,
+          filteredItems[index],
         );
       },
       child: Container(
@@ -156,4 +154,3 @@ class CustomItem extends StatelessWidget {
     );
   }
 }
-

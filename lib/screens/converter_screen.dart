@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'currency_list.dart';
 
 class Converter extends StatefulWidget {
-  final String chooseCurrency;
-
-  const Converter({Key? key, required this.chooseCurrency}) : super(key: key);
+  const Converter({super.key});
 
   @override
   ConverterState createState() => ConverterState();
@@ -13,8 +10,9 @@ class Converter extends StatefulWidget {
 
 class ConverterState extends State<Converter> {
   var value = 0;
-  var currency1 = "USD";
-  var currency2 = "COP";
+  String currency1 = '';
+  String currency2 = '';
+
 
   final List<String> buttons = [
     '1',
@@ -31,12 +29,12 @@ class ConverterState extends State<Converter> {
     'back',
   ];
 
-  void navigateToNewScreen(BuildContext context) {
+  void navigateToNewScreen(BuildContext context, String selectedCurrency) {
     Navigator.push(
       context,
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 400),
-        pageBuilder: (_, __, ___) => const CurrencyList(),
+        pageBuilder: (_, __, ___) => CurrencyList(selectedCurrency: selectedCurrency),
         transitionsBuilder: (BuildContext context, Animation<double> animation,
             Animation<double> secondaryAnimation, Widget child) {
           return SlideTransition(
@@ -48,11 +46,18 @@ class ConverterState extends State<Converter> {
           );
         },
       ),
-    );
+    ).then((value) {
+      if (value != null) {
+        setState(() {
+          currency1 = value;
+        });
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.grey[400],
       body: Column(
@@ -62,21 +67,13 @@ class ConverterState extends State<Converter> {
             color: Colors.red,
             value: value,
             currency: currency1,
-            onPressed: () => navigateToNewScreen(context),
+            onPressed: () => navigateToNewScreen(context, currency1)
           ),
           CardOption(
             color: Colors.blue,
             value: value,
             currency: currency2,
-            onPressed: () {
-              setState(() {
-                if (currency2 == "USD") {
-                  currency2 = "COP";
-                } else if (currency2 == "COP") {
-                  currency2 = "USD";
-                }
-              });
-            },
+              onPressed: () => navigateToNewScreen(context, currency2)
           ),
           GridButtons(buttons: buttons),
         ],
@@ -112,7 +109,9 @@ class GridButtons extends StatelessWidget {
         itemBuilder: (BuildContext context, int index) {
           if (buttons[index] == 'back') {
             return ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+
+              },
               style: ButtonStyle(
                 overlayColor: MaterialStateColor.resolveWith((states) {
                   if (states.contains(MaterialState.pressed)) {
@@ -134,7 +133,9 @@ class GridButtons extends StatelessWidget {
             );
           } else {
             return ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+
+              },
               style: ButtonStyle(
                 overlayColor: MaterialStateColor.resolveWith((states) {
                   if (states.contains(MaterialState.pressed)) {

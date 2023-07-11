@@ -76,7 +76,7 @@ class HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 children: const [
-                  Converter(chooseCurrency: ""),
+                  Converter(),
                   Calculator(),
                 ],
               ),
