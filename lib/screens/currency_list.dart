@@ -15,10 +15,7 @@ final List<String> currencies = [
 bool isSearching = false;
 
 class CurrencyList extends StatefulWidget {
-  final String selectedCurrency;
-
-  const CurrencyList({Key? key, required this.selectedCurrency})
-      : super(key: key);
+  const CurrencyList({super.key});
 
   @override
   State<CurrencyList> createState() => _CurrencyListState();
