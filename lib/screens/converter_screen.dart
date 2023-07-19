@@ -132,7 +132,7 @@ class CardOption extends StatelessWidget {
                       ),
                       const Icon(
                         Icons.keyboard_arrow_down,
-                        color: Colors.black,
+                        color: Colors.blue,
                       ),
                     ],
                   ),
