@@ -25,9 +25,12 @@ class Converter extends StatefulWidget {
 
 class ConverterState extends State<Converter> {
   String input1 = '';
-  String input2 = '0';
+  String input2 = '';
   String currency1 = '';
   String currency2 = '';
+  bool topCurrency = true;
+  bool downCurrency = false;
+  String currentInput = 'input1';
 
   void navigateToNewScreen(BuildContext context, bool topCurrency) {
     Navigator.push(
@@ -59,6 +62,20 @@ class ConverterState extends State<Converter> {
     });
   }
 
+  changeFocus(bool value) {
+    setState(() {
+      if (value == true) {
+        topCurrency = false;
+        downCurrency = true;
+        currentInput = 'input1';
+      } else {
+        topCurrency = true;
+        downCurrency = false;
+        currentInput = 'input2';
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,15 +84,27 @@ class ConverterState extends State<Converter> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           CardOption(
-              color: Colors.red,
+              chooseFocus: () {
+                setState(() {
+                  currentInput = 'input1';
+                });
+                changeFocus(true);
+              },
+              focus: topCurrency,
               value: input1,
               currency: currency1,
-              onPressed: () => navigateToNewScreen(context, true)),
+              onPressed: () => navigateToNewScreen(context, topCurrency)),
           CardOption(
-            color: Colors.blue,
+            chooseFocus: () {
+              setState(() {
+                currentInput = 'input1';
+              });
+              changeFocus(false);
+            },
+            focus: downCurrency,
             value: input2,
             currency: currency2,
-            onPressed: () => navigateToNewScreen(context, false),
+            onPressed: () => navigateToNewScreen(context, downCurrency),
           ),
           Container(
             margin: const EdgeInsets.all(5),
@@ -93,9 +122,9 @@ class ConverterState extends State<Converter> {
               itemCount: buttons.length,
               itemBuilder: (BuildContext context, int index) {
                 if (buttons[index] == 'back') {
-                  return CustomButton('back');
+                  return customButton('back');
                 } else {
-                  return CustomButton(buttons[index]);
+                  return customButton(buttons[index]);
                 }
               },
             ),
@@ -104,7 +133,8 @@ class ConverterState extends State<Converter> {
       ),
     );
   }
-  Widget CustomButton(String text) {
+
+  Widget customButton(String text) {
     return ElevatedButton(
       onPressed: () {
         setState(() {
@@ -133,72 +163,108 @@ class ConverterState extends State<Converter> {
     );
   }
 
-  getText(String text) {
+  void getText(String text) {
     if (text == 'back') {
-      input1 = input1.substring(0, input1.length - 1);
-      if (input1.isEmpty) {
-        input1 = '0';
-      }
+      setState(() {
+        if (currentInput == 'input1') {
+          input1 = input1.substring(0, input1.length - 1);
+          if (input1.isEmpty) {
+            input1 = '0';
+          }
+        } else {
+          input2 = input2.substring(0, input2.length - 1);
+          if (input2.isEmpty) {
+            input2 = '0';
+          }
+        }
+      });
       return;
     }
-    if(input1 == '0'){
-      input1 = '';
+
+    if (currentInput == 'input1') {
+      if (input1 == '0') {
+        input1 = '';
+      }
+      setState(() {
+        input1 = input1 + text;
+      });
+    } else {
+      if (input2 == '0') {
+        input2 = '';
+      }
+      setState(() {
+        input2 = input2 + text;
+      });
     }
-    input1 = input1 + text;
   }
 }
 
-class CardOption extends StatelessWidget {
+class CardOption extends StatefulWidget {
   const CardOption(
       {super.key,
-      required this.color,
       required this.value,
       required this.currency,
-      required this.onPressed});
+      required this.onPressed,
+      required this.chooseFocus,
+      required this.focus});
 
-  final Color color;
   final String value;
   final String currency;
   final VoidCallback onPressed;
+  final VoidCallback chooseFocus;
+  final bool focus;
+
+  @override
+  State<CardOption> createState() => _CardOptionState();
+}
+
+class _CardOptionState extends State<CardOption> {
+  void toggleFocus() {
+    widget.chooseFocus();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        margin: const EdgeInsets.all(5),
-        padding: const EdgeInsets.all(25),
-        decoration: BoxDecoration(
-            color: color, borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(fontSize: 25),
-                ),
-                TextButton(
-                  onPressed: onPressed,
-                  child: Row(
-                    children: [
-                      Text(
-                        currency,
-                        style:
-                            const TextStyle(fontSize: 20, color: Colors.black),
-                      ),
-                      const Icon(
-                        Icons.keyboard_arrow_down,
-                        color: Colors.black,
-                      ),
-                    ],
+      child: GestureDetector(
+        onTap: toggleFocus,
+        child: Container(
+          margin: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(25),
+          decoration: BoxDecoration(
+              color: widget.focus == false ? Colors.grey : Colors.grey[20],
+              borderRadius: BorderRadius.circular(10)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.value,
+                    style: const TextStyle(fontSize: 25),
                   ),
-                ),
-              ],
-            )
-          ],
+                  TextButton(
+                    onPressed: widget.onPressed,
+                    child: Row(
+                      children: [
+                        Text(
+                          widget.currency,
+                          style: const TextStyle(
+                              fontSize: 20, color: Colors.black),
+                        ),
+                        const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.black,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
