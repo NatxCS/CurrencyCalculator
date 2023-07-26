@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'currency_list.dart';
+import 'currency_list_screen.dart';
 
 final List<String> buttons = [
   '1',

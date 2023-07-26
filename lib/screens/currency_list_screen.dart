@@ -1,36 +1,30 @@
+import 'package:currency_calculator/model/currency_model.dart';
 import 'package:flutter/material.dart';
+import '../service/currency_exchange_repository.dart';
 
-final List<String> currencies = [
-  'COP',
-  'USD',
-  'AUD',
-  'CAD',
-  'EUR',
-  'ARG',
-  'CLP',
-  'DKK',
-  'JPY',
-  'GBP',
-];
-bool isSearching = false;
+
+
 
 class CurrencyList extends StatefulWidget {
-  const CurrencyList({super.key});
+  const CurrencyList({Key? key}) : super(key: key);
 
   @override
   State<CurrencyList> createState() => _CurrencyListState();
 }
 
 class _CurrencyListState extends State<CurrencyList> {
-  List<String> filteredItems = [];
+  bool isSearching = false;
+  List<Currency> currencies = [];
+  List<Currency> filteredCurrencies = [];
   String searchQuery = '';
   TextEditingController searchController = TextEditingController();
   final FocusNode searchFocusNode = FocusNode();
+  final CurrencyRepository _currencyConverterService = CurrencyRepository();
 
   @override
   void initState() {
     super.initState();
-    filteredItems = List.from(currencies);
+    fetchCurrencies(); // Fetch currencies list when the screen is initialized
   }
 
   @override
@@ -40,14 +34,30 @@ class _CurrencyListState extends State<CurrencyList> {
     super.dispose();
   }
 
-  void filterItems() {
+  Future<void> fetchCurrencies() async {
+    try {
+      currencies = await _currencyConverterService.fetchCurrenciesList();
+      setState(() {
+        filteredCurrencies = currencies;
+      });
+    } catch (e) {
+      print('Error fetching currencies: $e');
+    }
+  }
+
+  void filterCurrencies() {
     if (searchQuery.isEmpty) {
-      filteredItems = List.from(currencies);
+      setState(() {
+        filteredCurrencies = List.from(currencies);
+      });
     } else {
-      filteredItems = currencies
-          .where(
-              (item) => item.toLowerCase().contains(searchQuery.toLowerCase()))
-          .toList();
+      setState(() {
+        filteredCurrencies = currencies
+            .where(
+              (currency) => currency.code.toLowerCase().contains(searchQuery.toLowerCase()) ||
+              currency.name.toLowerCase().contains(searchQuery.toLowerCase()),
+        ).toList();
+      });
     }
   }
 
@@ -58,19 +68,18 @@ class _CurrencyListState extends State<CurrencyList> {
         backgroundColor: Colors.grey[400],
         title: isSearching
             ? TextField(
-                controller: searchController,
-                focusNode: searchFocusNode,
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                    filterItems();
-                  });
-                },
-                decoration: const InputDecoration(
-                  hintText: 'Search',
-                ),
-              )
-            : const Text('List of currencies'),
+          controller: searchController,
+          focusNode: searchFocusNode,
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value;
+              filterCurrencies();
+            });
+          },
+          decoration: const InputDecoration(
+            hintText: 'Search',
+          ),
+        ) : const Text('List of currencies'),
         actions: [
           IconButton(
             icon: Icon(
@@ -85,7 +94,7 @@ class _CurrencyListState extends State<CurrencyList> {
                 } else {
                   searchFocusNode.unfocus();
                   searchController.clear();
-                  filterItems();
+                  filterCurrencies();
                 }
               });
             },
@@ -100,11 +109,10 @@ class _CurrencyListState extends State<CurrencyList> {
         ),
       ),
       body: ListView.builder(
-        itemCount: filteredItems.length,
+        itemCount: filteredCurrencies.length,
         itemBuilder: (context, int index) {
           return CustomItem(
-            filteredItems: filteredItems,
-            index: index,
+            currency: filteredCurrencies[index],
           );
         },
       ),
@@ -113,11 +121,12 @@ class _CurrencyListState extends State<CurrencyList> {
 }
 
 class CustomItem extends StatelessWidget {
-  const CustomItem(
-      {super.key, required this.filteredItems, required this.index});
+  final Currency currency;
 
-  final List<String> filteredItems;
-  final int index;
+  const CustomItem({
+    Key? key,
+    required this.currency,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +134,7 @@ class CustomItem extends StatelessWidget {
       onTap: () {
         Navigator.pop(
           context,
-          filteredItems[index],
+          currency.code,
         );
       },
       child: Container(
@@ -141,9 +150,19 @@ class CustomItem extends StatelessWidget {
               Icons.flag_circle_sharp,
               size: 40,
             ),
-            Text(
-              filteredItems[index],
-              style: const TextStyle(fontSize: 20),
+            SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  currency.code,
+                  style: const TextStyle(fontSize: 20),
+                ),
+                Text(
+                  currency.name,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ],
             ),
           ],
         ),
