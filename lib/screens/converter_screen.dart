@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import '../model/currency_model.dart';
+import '../service/currency_exchange_repository.dart';
 import 'currency_list_screen.dart';
+import 'package:intl/intl.dart';
+
 
 final List<String> buttons = [
   '1',
@@ -11,7 +15,7 @@ final List<String> buttons = [
   '7',
   '8',
   '9',
-  ',',
+  'C',
   '0',
   'back',
 ];
@@ -24,13 +28,12 @@ class Converter extends StatefulWidget {
 }
 
 class ConverterState extends State<Converter> {
-  String input1 = '';
-  String input2 = '';
-  String currency1 = '';
-  String currency2 = '';
-  bool topCurrency = true;
-  bool downCurrency = false;
-  String currentInput = 'input1';
+  final CurrencyRepository _currencyConverterService = CurrencyRepository();
+  int amount = 0;
+  double convertedAmount = 0.0;
+  String fromCurrency = 'USD';
+  String toCurrency = 'COP';
+
 
   void navigateToNewScreen(BuildContext context, bool topCurrency) {
     Navigator.push(
@@ -53,28 +56,16 @@ class ConverterState extends State<Converter> {
       if (value != null) {
         setState(() {
           if (topCurrency == true) {
-            currency1 = value;
+            fromCurrency = value;
           } else {
-            currency2 = value;
+            toCurrency = value;
           }
         });
       }
     });
   }
 
-  changeFocus(bool value) {
-    setState(() {
-      if (value == true) {
-        topCurrency = false;
-        downCurrency = true;
-        currentInput = 'input1';
-      } else {
-        topCurrency = true;
-        downCurrency = false;
-        currentInput = 'input2';
-      }
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -84,27 +75,16 @@ class ConverterState extends State<Converter> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           CardOption(
-              chooseFocus: () {
-                setState(() {
-                  currentInput = 'input1';
-                });
-                changeFocus(true);
-              },
-              focus: topCurrency,
-              value: input1,
-              currency: currency1,
-              onPressed: () => navigateToNewScreen(context, topCurrency)),
+            value: amount.toDouble(),
+            currency: fromCurrency,
+            onButtonPressed: () => navigateToNewScreen(context, true),
+            onCardPressed: () => _selectCurrency('from'),
+          ),
           CardOption(
-            chooseFocus: () {
-              setState(() {
-                currentInput = 'input1';
-              });
-              changeFocus(false);
-            },
-            focus: downCurrency,
-            value: input2,
-            currency: currency2,
-            onPressed: () => navigateToNewScreen(context, downCurrency),
+            value: convertedAmount,
+            currency: toCurrency,
+            onButtonPressed: () => navigateToNewScreen(context, false),
+            onCardPressed: () => _selectCurrency('to'),
           ),
           Container(
             margin: const EdgeInsets.all(5),
@@ -113,7 +93,7 @@ class ConverterState extends State<Converter> {
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3, // Number of columns
-                childAspectRatio: 2.0,
+                childAspectRatio: 1.5,
                 crossAxisSpacing: 2.5,
                 mainAxisSpacing: 2.5,
               ),
@@ -122,9 +102,11 @@ class ConverterState extends State<Converter> {
               itemCount: buttons.length,
               itemBuilder: (BuildContext context, int index) {
                 if (buttons[index] == 'back') {
-                  return customButton('back');
-                } else {
-                  return customButton(buttons[index]);
+                  return customButton('back', onPressed: () => onCustomButtonPressed('back'));
+                } else if(buttons[index] == 'C') {
+                  return customButton('C',onPressed: () => onCustomButtonPressed('C'));
+                }else{
+                  return customButton(buttons[index], onPressed: () => onCustomButtonPressed(buttons[index]));
                 }
               },
             ),
@@ -134,13 +116,26 @@ class ConverterState extends State<Converter> {
     );
   }
 
-  Widget customButton(String text) {
+  void _selectCurrency(String type) {
+    if (type == 'from') {
+      setState(() {
+        String temp = fromCurrency;
+        fromCurrency = toCurrency;
+        toCurrency = temp;
+      });
+    } else if (type == 'to') {
+      setState(() {
+        String temp = toCurrency;
+        toCurrency = fromCurrency;
+        fromCurrency = temp;
+      });
+    }
+    _updateConversion();
+  }
+
+  Widget customButton(String text, {VoidCallback? onPressed}) {
     return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          getText(text);
-        });
-      },
+      onPressed: onPressed,
       style: ButtonStyle(
         overlayColor: MaterialStateColor.resolveWith((states) {
           if (states.contains(MaterialState.pressed)) {
@@ -155,7 +150,7 @@ class ConverterState extends State<Converter> {
         ),
       ),
       child: text == 'back'
-          ? const Icon(Icons.arrow_back, color: Colors.black, size: 35)
+          ? const Icon(Icons.arrow_back, color: Colors.black)
           : Text(
               text,
               style: const TextStyle(color: Colors.black, fontSize: 16),
@@ -163,76 +158,72 @@ class ConverterState extends State<Converter> {
     );
   }
 
-  void getText(String text) {
-    if (text == 'back') {
-      setState(() {
-        if (currentInput == 'input1') {
-          input1 = input1.substring(0, input1.length - 1);
-          if (input1.isEmpty) {
-            input1 = '0';
-          }
+  void onCustomButtonPressed(String buttonText) {
+    setState(() {
+      if (buttonText == 'C') {
+        amount = 0;
+        convertedAmount = 0.0;
+      } else if (buttonText == 'back') {
+        if (amount.toString().length > 1) {
+          amount = int.parse(amount.toString().substring(0, amount.toString().length - 1));
         } else {
-          input2 = input2.substring(0, input2.length - 1);
-          if (input2.isEmpty) {
-            input2 = '0';
-          }
+          amount = 0;
         }
-      });
-      return;
-    }
+      } else {
+        if (amount == 0 && buttonText != '.') {
+          amount = int.parse(buttonText);
+        } else {
+          amount = int.parse('$amount$buttonText');
+        }
+      }
+      if (amount == 0) {
+        convertedAmount = 0.0;
+      }
+    });
+    _updateConversion();
+  }
 
-    if (currentInput == 'input1') {
-      if (input1 == '0') {
-        input1 = '';
-      }
+  void _updateConversion() async {
+    try {
+      CurrencyExchange exchange = await _currencyConverterService.fetchCurrencyExchange(
+        oldCurrency: fromCurrency,
+        newCurrency: toCurrency,
+        amount: amount.toDouble(),
+      );
       setState(() {
-        input1 = input1 + text;
+        convertedAmount = exchange.newAmount;
       });
-    } else {
-      if (input2 == '0') {
-        input2 = '';
-      }
-      setState(() {
-        input2 = input2 + text;
-      });
+    } catch (e) {
+      print('Error: $e');
     }
   }
+
 }
 
-class CardOption extends StatefulWidget {
+class CardOption extends StatelessWidget {
   const CardOption(
       {super.key,
       required this.value,
       required this.currency,
-      required this.onPressed,
-      required this.chooseFocus,
-      required this.focus});
+      required this.onButtonPressed,
+      required this.onCardPressed});
 
-  final String value;
+  final double value;
   final String currency;
-  final VoidCallback onPressed;
-  final VoidCallback chooseFocus;
-  final bool focus;
-
-  @override
-  State<CardOption> createState() => _CardOptionState();
-}
-
-class _CardOptionState extends State<CardOption> {
-  void toggleFocus() {
-    widget.chooseFocus();
-  }
+  final VoidCallback onButtonPressed;
+  final VoidCallback onCardPressed;
 
   @override
   Widget build(BuildContext context) {
+    String formattedValue = NumberFormat('0.#####').format(value);
     return Expanded(
       child: GestureDetector(
-        onTap: toggleFocus,
+        onTap: onCardPressed,
         child: Container(
           margin: const EdgeInsets.all(5),
           padding: const EdgeInsets.all(25),
           decoration: BoxDecoration(
-              color: widget.focus == false ? Colors.grey : Colors.grey[20],
+              color: Colors.grey,
               borderRadius: BorderRadius.circular(10)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -242,15 +233,15 @@ class _CardOptionState extends State<CardOption> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    widget.value,
+                    formattedValue,
                     style: const TextStyle(fontSize: 25),
                   ),
                   TextButton(
-                    onPressed: widget.onPressed,
+                    onPressed: onButtonPressed,
                     child: Row(
                       children: [
                         Text(
-                          widget.currency,
+                          currency,
                           style: const TextStyle(
                               fontSize: 20, color: Colors.black),
                         ),
