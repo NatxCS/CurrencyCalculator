@@ -108,7 +108,8 @@ class _CurrencyListState extends State<CurrencyList> {
           },
         ),
       ),
-      body: ListView.builder(
+      body: currencies.isEmpty ? const Center(child: CircularProgressIndicator(color: Colors.green),)
+      : ListView.builder(
         itemCount: filteredCurrencies.length,
         itemBuilder: (context, int index) {
           return CustomItem(
