@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../model/currency_model.dart';
 import '../service/currency_exchange_repository.dart';
 import 'currency_list_screen.dart';
 import 'package:intl/intl.dart';
+
 
 
 final List<String> buttons = [
@@ -185,19 +185,15 @@ class ConverterState extends State<Converter> {
 
   void _updateConversion() async {
     try {
-      CurrencyExchange exchange = await _currencyConverterService.fetchCurrencyExchange(
-        oldCurrency: fromCurrency,
-        newCurrency: toCurrency,
-        amount: amount.toDouble(),
-      );
+      Map<String, double> conversionRates = await _currencyConverterService.getConversionRates();
+      double rate = conversionRates[toCurrency]! / conversionRates[fromCurrency]!;
       setState(() {
-        convertedAmount = exchange.newAmount;
+        convertedAmount = amount.toDouble() * rate;
       });
     } catch (e) {
       print('Error: $e');
     }
   }
-
 }
 
 class CardOption extends StatelessWidget {
