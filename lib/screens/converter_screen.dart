@@ -35,6 +35,16 @@ class ConverterState extends State<Converter> {
   String toCurrency = 'COP';
 
 
+  String formatNumberWithCommas(num number) {
+    if (number is int) {
+      return NumberFormat("#,###", "es_ES").format(number);
+    } else if (number is double) {
+      return NumberFormat("#,###.#####", "es_ES").format(number);
+    } else {
+      return '';
+    }
+  }
+
   void navigateToNewScreen(BuildContext context, bool topCurrency) {
     Navigator.push(
       context,
@@ -75,13 +85,13 @@ class ConverterState extends State<Converter> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           CardOption(
-            value: amount.toDouble(),
+            value: formatNumberWithCommas(amount),
             currency: fromCurrency,
             onButtonPressed: () => navigateToNewScreen(context, true),
             onCardPressed: () => _selectCurrency('from'),
           ),
           CardOption(
-            value: convertedAmount,
+            value: formatNumberWithCommas(convertedAmount),
             currency: toCurrency,
             onButtonPressed: () => navigateToNewScreen(context, false),
             onCardPressed: () => _selectCurrency('to'),
@@ -170,7 +180,7 @@ class ConverterState extends State<Converter> {
           amount = 0;
         }
       } else {
-        if (amount == 0 && buttonText != '.') {
+        if (amount == 0) {
           amount = int.parse(buttonText);
         } else {
           amount = int.parse('$amount$buttonText');
@@ -204,14 +214,13 @@ class CardOption extends StatelessWidget {
       required this.onButtonPressed,
       required this.onCardPressed});
 
-  final double value;
+  final String value;
   final String currency;
   final VoidCallback onButtonPressed;
   final VoidCallback onCardPressed;
 
   @override
   Widget build(BuildContext context) {
-    String formattedValue = NumberFormat('0.#####').format(value);
     return Expanded(
       child: GestureDetector(
         onTap: onCardPressed,
@@ -229,7 +238,7 @@ class CardOption extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    formattedValue,
+                    value,
                     style: const TextStyle(fontSize: 25),
                   ),
                   TextButton(
