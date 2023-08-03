@@ -9,15 +9,18 @@ final List<String> buttons = [
   '1',
   '2',
   '3',
+  'back',
   '4',
   '5',
   '6',
+  '',
   '7',
   '8',
   '9',
+  '',
   'C',
   '0',
-  'back',
+  ',',
 ];
 
 class Converter extends StatefulWidget {
@@ -102,7 +105,7 @@ class ConverterState extends State<Converter> {
             color: Colors.grey[400],
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3, // Number of columns
+                crossAxisCount: 4, // Number of columns
                 childAspectRatio: 1.5,
                 crossAxisSpacing: 2.5,
                 mainAxisSpacing: 2.5,
@@ -115,6 +118,8 @@ class ConverterState extends State<Converter> {
                   return customButton('back', onPressed: () => onCustomButtonPressed('back'));
                 } else if(buttons[index] == 'C') {
                   return customButton('C',onPressed: () => onCustomButtonPressed('C'));
+                }else if(buttons[index] == ''){
+                  return const SizedBox();
                 }else{
                   return customButton(buttons[index], onPressed: () => onCustomButtonPressed(buttons[index]));
                 }
