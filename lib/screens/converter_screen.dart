@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../service/currency_exchange_repository.dart';
 import 'currency_list_screen.dart';
-import 'package:intl/intl.dart';
-
-
 
 final List<String> buttons = [
   '1',
@@ -13,14 +10,14 @@ final List<String> buttons = [
   '4',
   '5',
   '6',
-  '',
+  'C',
   '7',
   '8',
   '9',
   '',
-  'C',
+  '00',
   '0',
-  ',',
+  '.',
 ];
 
 class Converter extends StatefulWidget {
@@ -32,20 +29,32 @@ class Converter extends StatefulWidget {
 
 class ConverterState extends State<Converter> {
   final CurrencyRepository _currencyConverterService = CurrencyRepository();
-  int amount = 0;
+  double amount = 0.0;
   double convertedAmount = 0.0;
   String fromCurrency = 'USD';
   String toCurrency = 'COP';
+  String amountString = '0';
+  bool commaPressed = false;
 
+  String formatNumberWithCommas(String input) {
+    List<String> parts = input.split('.');
+    String integerPart = parts[0];
+    String decimalPart = parts.length > 1 ? ".${parts[1]}" : "";
 
-  String formatNumberWithCommas(num number) {
-    if (number is int) {
-      return NumberFormat("#,###", "es_ES").format(number);
-    } else if (number is double) {
-      return NumberFormat("#,###.#####", "es_ES").format(number);
-    } else {
-      return '';
+    int length = integerPart.length;
+    int commaCount = (length - 1) ~/ 3;
+
+    String result = "";
+
+    for (int i = 0; i < length; i++) {
+      result += integerPart[i];
+      if ((length - i - 1) % 3 == 0 && commaCount > 0) {
+        result += ",";
+        commaCount--;
+      }
     }
+
+    return result + decimalPart;
   }
 
   void navigateToNewScreen(BuildContext context, bool topCurrency) {
@@ -78,8 +87,6 @@ class ConverterState extends State<Converter> {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,13 +95,13 @@ class ConverterState extends State<Converter> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           CardOption(
-            value: formatNumberWithCommas(amount),
+            value: formatNumberWithCommas(amountString),
             currency: fromCurrency,
             onButtonPressed: () => navigateToNewScreen(context, true),
             onCardPressed: () => _selectCurrency('from'),
           ),
           CardOption(
-            value: formatNumberWithCommas(convertedAmount),
+            value: formatNumberWithCommas(convertedAmount.toString()),
             currency: toCurrency,
             onButtonPressed: () => navigateToNewScreen(context, false),
             onCardPressed: () => _selectCurrency('to'),
@@ -115,13 +122,16 @@ class ConverterState extends State<Converter> {
               itemCount: buttons.length,
               itemBuilder: (BuildContext context, int index) {
                 if (buttons[index] == 'back') {
-                  return customButton('back', onPressed: () => onCustomButtonPressed('back'));
-                } else if(buttons[index] == 'C') {
-                  return customButton('C',onPressed: () => onCustomButtonPressed('C'));
-                }else if(buttons[index] == ''){
+                  return customButton('back',
+                      onPressed: () => onCustomButtonPressed('back'));
+                } else if (buttons[index] == 'C') {
+                  return customButton('C',
+                      onPressed: () => onCustomButtonPressed('C'));
+                } else if (buttons[index] == '') {
                   return const SizedBox();
-                }else{
-                  return customButton(buttons[index], onPressed: () => onCustomButtonPressed(buttons[index]));
+                } else {
+                  return customButton(buttons[index],
+                      onPressed: () => onCustomButtonPressed(buttons[index]));
                 }
               },
             ),
@@ -176,34 +186,53 @@ class ConverterState extends State<Converter> {
   void onCustomButtonPressed(String buttonText) {
     setState(() {
       if (buttonText == 'C') {
-        amount = 0;
+        amount = 0.0;
+        commaPressed = false;
         convertedAmount = 0.0;
+        amountString = '0';
       } else if (buttonText == 'back') {
-        if (amount.toString().length > 1) {
-          amount = int.parse(amount.toString().substring(0, amount.toString().length - 1));
+        if (amountString.isNotEmpty) {
+          if (amountString.endsWith('.')) {
+            commaPressed = false;
+          }
+          amountString = amountString.substring(0, amountString.length - 1);
+          if (amountString.isEmpty) {
+            amountString = '0';
+          }
+        }
+      } else if (buttonText == '.') {
+        if (!commaPressed) {
+          amountString += '.';
+          commaPressed = true;
+        }
+      } else if (buttonText == '00') {
+        if (amountString == '0') {
+          amountString = '0';
         } else {
-          amount = 0;
+          amountString += buttonText;
         }
       } else {
-        if (amount == 0) {
-          amount = int.parse(buttonText);
+        if (amountString == '0') {
+          amountString = buttonText;
         } else {
-          amount = int.parse('$amount$buttonText');
+          amountString += buttonText;
         }
       }
-      if (amount == 0) {
-        convertedAmount = 0.0;
-      }
+
+      amount = double.tryParse(amountString) ?? 0.0;
     });
+
     _updateConversion();
   }
 
   void _updateConversion() async {
     try {
-      Map<String, double> conversionRates = await _currencyConverterService.getConversionRates();
-      double rate = conversionRates[toCurrency]! / conversionRates[fromCurrency]!;
+      Map<String, double> conversionRates =
+          await _currencyConverterService.getConversionRates();
+      double rate =
+          conversionRates[toCurrency]! / conversionRates[fromCurrency]!;
       setState(() {
-        convertedAmount = amount.toDouble() * rate;
+        convertedAmount = amount * rate;
       });
     } catch (e) {
       print('Error: $e');
@@ -233,8 +262,7 @@ class CardOption extends StatelessWidget {
           margin: const EdgeInsets.all(5),
           padding: const EdgeInsets.all(25),
           decoration: BoxDecoration(
-              color: Colors.grey,
-              borderRadius: BorderRadius.circular(10)),
+              color: Colors.grey, borderRadius: BorderRadius.circular(10)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
