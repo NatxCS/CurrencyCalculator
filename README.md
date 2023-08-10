@@ -1,16 +1,12 @@
-# currency_calculator
+# Currency Exchange Rates App
 
-Calculator of currencies and other units
+Welcome to the Currency Exchange Rates app, this Flutter-based mobile application allows users to quickly check currency exchange rates and perform unit conversions using a built-in calculator (**under development**). This app is designed to demonstrate my Android development skills and passion for creating intuitive, practical solutions.
 
-## Getting Started
+Please note that this app currently utilizes the free version of the AppExchange API, which may not provide up-to-date rates.
 
-This project is a starting point for a Flutter application.
+## Features
 
-A few resources to get you started if this is your first Flutter project:
+- Access currency exchange rates using the ExchangeRate-API.
+- Explore rates for a wide range of international currencies.
+- User-friendly interface for inputting values and selecting units.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
