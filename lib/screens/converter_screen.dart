@@ -1,5 +1,7 @@
+import 'package:currency_calculator/widgets/calculator_keyboard.dart';
 import 'package:flutter/material.dart';
 import '../service/currency_exchange_repository.dart';
+import '../widgets/card_option.dart';
 import 'currency_list_screen.dart';
 
 final List<String> buttons = [
@@ -106,36 +108,7 @@ class ConverterState extends State<Converter> {
             onButtonPressed: () => navigateToNewScreen(context, false),
             onCardPressed: () => _selectCurrency('to'),
           ),
-          Container(
-            margin: const EdgeInsets.all(5),
-            padding: const EdgeInsets.all(1.5),
-            color: Colors.grey[400],
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, // Number of columns
-                childAspectRatio: 1.5,
-                crossAxisSpacing: 2.5,
-                mainAxisSpacing: 2.5,
-              ),
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: buttons.length,
-              itemBuilder: (BuildContext context, int index) {
-                if (buttons[index] == 'back') {
-                  return customButton('back',
-                      onPressed: () => onCustomButtonPressed('back'));
-                } else if (buttons[index] == 'C') {
-                  return customButton('C',
-                      onPressed: () => onCustomButtonPressed('C'));
-                } else if (buttons[index] == '') {
-                  return const SizedBox();
-                } else {
-                  return customButton(buttons[index],
-                      onPressed: () => onCustomButtonPressed(buttons[index]));
-                }
-              },
-            ),
-          )
+         CalculatorKeys(amount: amount, convertedAmount: convertedAmount, amountString: amountString, commaPressed: commaPressed, onButtonPressed: onCustomButtonPressed)
         ],
       ),
     );
@@ -156,31 +129,6 @@ class ConverterState extends State<Converter> {
       });
     }
     _updateConversion();
-  }
-
-  Widget customButton(String text, {VoidCallback? onPressed}) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ButtonStyle(
-        overlayColor: MaterialStateColor.resolveWith((states) {
-          if (states.contains(MaterialState.pressed)) {
-            return Colors.green.withOpacity(0.2);
-          }
-          return Colors.transparent;
-        }),
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      ),
-      child: text == 'back'
-          ? const Icon(Icons.arrow_back, color: Colors.black)
-          : Text(
-              text,
-              style: const TextStyle(color: Colors.black, fontSize: 16),
-            ),
-    );
   }
 
   void onCustomButtonPressed(String buttonText) {
@@ -221,7 +169,6 @@ class ConverterState extends State<Converter> {
 
       amount = double.tryParse(amountString) ?? 0.0;
     });
-
     _updateConversion();
   }
 
@@ -240,62 +187,4 @@ class ConverterState extends State<Converter> {
   }
 }
 
-class CardOption extends StatelessWidget {
-  const CardOption(
-      {super.key,
-      required this.value,
-      required this.currency,
-      required this.onButtonPressed,
-      required this.onCardPressed});
 
-  final String value;
-  final String currency;
-  final VoidCallback onButtonPressed;
-  final VoidCallback onCardPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onCardPressed,
-        child: Container(
-          margin: const EdgeInsets.all(5),
-          padding: const EdgeInsets.all(25),
-          decoration: BoxDecoration(
-              color: Colors.grey, borderRadius: BorderRadius.circular(10)),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    value,
-                    style: const TextStyle(fontSize: 25),
-                  ),
-                  TextButton(
-                    onPressed: onButtonPressed,
-                    child: Row(
-                      children: [
-                        Text(
-                          currency,
-                          style: const TextStyle(
-                              fontSize: 20, color: Colors.black),
-                        ),
-                        const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Colors.black,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
