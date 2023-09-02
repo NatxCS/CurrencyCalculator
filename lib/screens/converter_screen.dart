@@ -5,24 +5,6 @@ import '../utils/number_format_utils.dart';
 import '../widgets/card_option.dart';
 import 'currency_list_screen.dart';
 
-final List<String> buttons = [
-  '1',
-  '2',
-  '3',
-  'back',
-  '4',
-  '5',
-  '6',
-  'C',
-  '7',
-  '8',
-  '9',
-  '',
-  '00',
-  '0',
-  '.',
-];
-
 class Converter extends StatefulWidget {
   const Converter({super.key});
 
@@ -38,8 +20,6 @@ class ConverterState extends State<Converter> {
   String toCurrency = 'COP';
   String amountString = '0';
   bool commaPressed = false;
-
-
 
   void navigateToNewScreen(BuildContext context, bool topCurrency) {
     Navigator.push(
@@ -90,7 +70,12 @@ class ConverterState extends State<Converter> {
             onButtonPressed: () => navigateToNewScreen(context, false),
             onCardPressed: () => _selectCurrency('to'),
           ),
-         CalculatorKeys(amount: amount, convertedAmount: convertedAmount, amountString: amountString, commaPressed: commaPressed, onButtonPressed: onCustomButtonPressed)
+          CalculatorKeys(
+              amount: amount,
+              convertedAmount: convertedAmount,
+              amountString: amountString,
+              commaPressed: commaPressed,
+              onButtonPressed: onCustomButtonPressed)
         ],
       ),
     );
@@ -168,5 +153,3 @@ class ConverterState extends State<Converter> {
     }
   }
 }
-
-
